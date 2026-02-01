@@ -13,12 +13,12 @@ echo "--- Android arm64 ビルド ---"
 bazel build --config=android_arm64 //litert/c:litert_runtime_c_api_so
 echo "Android arm64 ビルド完了"
 
-# ビルド成果物をコピー
+# ビルド成果物をコピー (cp -L でシンボリックリンクを解決)
 mkdir -p "${OUTPUT_DIR}/Android/arm64-v8a"
-cp bazel-bin/litert/c/libLiteRt.so "${OUTPUT_DIR}/Android/arm64-v8a/" 2>/dev/null || \
-    find bazel-bin/litert/c -name "*.so" -exec cp {} "${OUTPUT_DIR}/Android/arm64-v8a/" \;
+SO_PATH="$(readlink -f bazel-bin/litert/c/libLiteRt.so)"
+echo "成果物パス: ${SO_PATH}"
+cp -L "${SO_PATH}" "${OUTPUT_DIR}/Android/arm64-v8a/libLiteRt.so"
+ls -la "${OUTPUT_DIR}/Android/arm64-v8a/"
 
 echo ""
 echo "=== ビルド完了 ==="
-echo "成果物:"
-find "${OUTPUT_DIR}" -type f \( -name "*.so" -o -name "*.dylib" \) | sort

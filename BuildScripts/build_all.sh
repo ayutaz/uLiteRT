@@ -3,6 +3,9 @@
 # 成果物を Assets/Plugins/ にコピーするスクリプト
 set -euo pipefail
 
+# Git Bash (MSYS2) のパス自動変換を無効化 (Docker の -e /path 引数が壊れるのを防ぐ)
+export MSYS_NO_PATHCONV=1
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 LITERT_DIR="$(cd "${SCRIPT_DIR}/../../LiteRT" && pwd)"
@@ -52,7 +55,6 @@ fi
 docker run \
     --name "${CONTAINER_NAME}" \
     --security-opt seccomp=unconfined \
-    -e HOME=/litert_build \
     -e OUTPUT_DIR=/output \
     "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}" \
     -v "${LITERT_DIR}:/litert_build" \

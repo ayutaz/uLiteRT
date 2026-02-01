@@ -83,11 +83,22 @@ ENV ANDROID_NDK_VERSION=25
 WORKDIR /litert_build
 
 COPY BuildScripts/build_native.sh /build_native.sh
-RUN chmod +x /build_native.sh
+RUN sed -i 's/\r$//' /build_native.sh && chmod +x /build_native.sh
 
 ENTRYPOINT ["/bin/bash", "-c", "\
+    export HOME=/root && \
     git config --global --add safe.directory /litert_build && \
     git config --global --add safe.directory /litert_build/third_party/tensorflow && \
+    echo 'CRLF → LF 変換中...' && \
+    cd /litert_build && \
+    git config core.autocrlf input && \
+    git checkout -- . && \
+    if [ -d third_party/tensorflow ]; then \
+        cd third_party/tensorflow && \
+        git config core.autocrlf input && \
+        git checkout -- . && \
+        cd /litert_build; \
+    fi && \
     /litert_build/configure --workspace=/litert_build && \
     exec \"$@\"", "--"]
 
