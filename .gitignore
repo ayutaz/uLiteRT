@@ -1,0 +1,49 @@
+# ============================================================
+# Unity .gitignore
+# ============================================================
+
+# Unity 生成フォルダ
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]serSettings/
+
+# IDE
+/.idea/
+/.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.unityproj
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unity 関連
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+
+# Crashlytics
+crashlytics-build.properties
+
+# ============================================================
+# ネイティブライブラリバイナリ (ビルド成果物)
+# ============================================================
+Assets/Plugins/**/*.dll
+Assets/Plugins/**/*.so
+Assets/Plugins/**/*.dylib
+Assets/Plugins/**/*.a
+Assets/Plugins/**/*.framework/
+
+# Bazel
+/bazel-*/
