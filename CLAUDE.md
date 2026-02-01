@@ -24,16 +24,47 @@ Android / iOS / Windows をターゲットとし、CPU・GPU・NPU アクセラ�
 # テストは Unity Test Runner (Window > General > Test Runner) から実行
 ```
 
-### ネイティブライブラリビルド (Bazel)
+### ネイティブライブラリビルド
+
+LiteRT ソースは `C:\Users\yuta\Desktop\Private\LiteRT\` に配置されている前提。
+現在 LiteRT **v2.1.2** タグでビルド確認済み（main ブランチには `fp16.h` 再定義バグあり）。
 
 ```bash
-# Windows (x86_64)
-bazel build --config=windows //litert/c:litert_runtime_c_api_dll
+# Android arm64 (Docker 経由、Linux/macOS/Windows いずれも可)
+# 前提: Docker が起動していること
+bash BuildScripts/build_all.sh
+# → Assets/Plugins/Android/arm64-v8a/libLiteRt.so が生成される
 
+# Windows x86_64 (ローカル Bazel、未検証)
+# 前提: Bazel がインストール済みであること
+BuildScripts\build_native.bat
+# → Assets/Plugins/Windows/x86_64/libLiteRt.dll が生成される
+```
+
+#### ビルドスクリプト構成
+
+| ファイル | 説明 |
+|---|---|
+| `BuildScripts/Dockerfile` | Android ビルド用 Docker 環境 (Ubuntu 24.04, Bazel 7.4.1, Android NDK r28b) |
+| `BuildScripts/build_native.sh` | Docker 内で実行される Android arm64 ビルドスクリプト |
+| `BuildScripts/build_native.bat` | Windows ローカルで実行する DLL ビルドスクリプト |
+| `BuildScripts/build_all.sh` | Docker ビルド起動 + Assets/Plugins/ への成果物コピー |
+
+#### Windows (Git Bash) での注意事項
+
+- `MSYS_NO_PATHCONV=1` が必要（`build_all.sh` 内で自動設定済み）
+- LiteRT ソースの CRLF 改行は Docker エントリーポイントで `git checkout` により自動変換される
+
+#### Bazel ビルドターゲット (参考)
+
+```bash
 # Android (ARM64)
 bazel build --config=android_arm64 //litert/c:litert_runtime_c_api_so
 
-# macOS (Apple Silicon)
+# Windows (x86_64)
+bazel build //litert/c:litert_runtime_c_api_dll
+
+# macOS (Apple Silicon) — 将来対応
 bazel build --config=macos_arm64 //litert/c:litert_runtime_c_api_dylib
 ```
 
@@ -47,11 +78,13 @@ P/Invoke で LiteRT 2.x CompiledModel C API を直接呼び出す。プラット
 
 ```
 Assets/Plugins/
-  Windows/x86_64/libLiteRt.dll
-  Android/libs/arm64-v8a/libLiteRt.so
-  macOS/libLiteRt.dylib
-  iOS/libLiteRt.a (or .framework)
+  Android/arm64-v8a/libLiteRt.so   ← ビルド確認済み (v2.1.2)
+  Windows/x86_64/libLiteRt.dll     ← 未検証
+  macOS/libLiteRt.dylib            ← 将来対応
+  iOS/libLiteRt.a (or .framework)  ← 将来対応
 ```
+
+バイナリは `.gitignore` で除外されるため、各環境でビルドスクリプトを実行して配置する。
 
 ### C# クラス構成 (計画)
 
