@@ -86,21 +86,25 @@ Assets/Plugins/
 
 バイナリは `.gitignore` で除外されるため、各環境でビルドスクリプトを実行して配置する。
 
-### C# クラス構成 (計画)
+### C# クラス構成
 
 ```
 Assets/LiteRT/Runtime/
-  Native.cs                  — 全 P/Invoke 宣言 (static class)
-  Enums.cs                   — LiteRtStatus, LiteRtHwAccelerators 等
-  Structs.cs                 — LiteRtLayout, LiteRtRankedTensorType 等
-  LiteRtException.cs         — ステータス → 例外変換
-  LiteRtEnvironment.cs       — IDisposable ラッパー
-  LiteRtModel.cs             — モデル読み込み + シグネチャ情報
-  LiteRtOptions.cs           — コンパイルオプションビルダー
-  LiteRtCompiledModel.cs     — 推論実行の高レベル API
-  LiteRtTensorBuffer.cs      — バッファ管理 (Lock/Unlock/Dispose)
-  GpuOptions.cs              — GPU 固有オプション
-  CpuOptions.cs              — CPU 固有オプション
+  Native.cs                  — 全 P/Invoke 宣言 (static class)              [実装済み]
+  Enums.cs                   — LiteRtStatus, LiteRtHwAccelerators 等        [実装済み]
+  Structs.cs                 — LiteRtLayout, LiteRtRankedTensorType 等      [実装済み]
+  LiteRtException.cs         — ステータス → 例外変換                        [実装済み]
+  LiteRtEnvironment.cs       — IDisposable ラッパー                         [実装済み]
+  LiteRtModel.cs             — モデル読み込み + シグネチャ情報              [実装済み]
+  LiteRtOptions.cs           — コンパイルオプションビルダー                 [実装済み]
+  LiteRtCompiledModel.cs     — 推論実行の高レベル API                       [実装済み]
+  LiteRtTensorBuffer.cs      — バッファ管理 (Lock/Unlock/Dispose)           [実装済み]
+  GpuOptions.cs              — GPU 固有オプション                           [未実装]
+  CpuOptions.cs              — CPU 固有オプション                           [未実装]
+
+Assets/LiteRT/Tests/Runtime/
+  StructLayoutTests.cs       — 構造体サイズ・オフセット検証                 [実装済み]
+  EnumTests.cs               — 列挙値の C ヘッダーとの一致検証              [実装済み]
 ```
 
 ### API呼び出しフロー
