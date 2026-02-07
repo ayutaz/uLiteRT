@@ -1,0 +1,67 @@
+// LiteRT Unity バインディング — 構造体サイズ検証テスト
+
+using System.Runtime.InteropServices;
+using NUnit.Framework;
+
+namespace LiteRT.Tests
+{
+    /// <summary>
+    /// C# 構造体のマーシャリングサイズが C 側と一致するか検証するテスト。
+    /// ネイティブライブラリなしで実行可能（EditMode テスト）。
+    /// </summary>
+    public class StructLayoutTests
+    {
+        [Test]
+        public void LiteRtLayout_SizeIs68Bytes()
+        {
+            // C 側: uint(4) + int32_t[8](32) + uint32_t[8](32) = 68
+            int size = Marshal.SizeOf<LiteRtLayout>();
+            Assert.AreEqual(68, size,
+                $"LiteRtLayout のサイズが想定と異なります: {size} bytes (期待値: 68)");
+        }
+
+        [Test]
+        public void LiteRtRankedTensorType_SizeIs72Bytes()
+        {
+            // LiteRtElementType(4) + LiteRtLayout(68) = 72
+            int size = Marshal.SizeOf<LiteRtRankedTensorType>();
+            Assert.AreEqual(72, size,
+                $"LiteRtRankedTensorType のサイズが想定と異なります: {size} bytes (期待値: 72)");
+        }
+
+        [Test]
+        public void LiteRtUnrankedTensorType_SizeIs4Bytes()
+        {
+            int size = Marshal.SizeOf<LiteRtUnrankedTensorType>();
+            Assert.AreEqual(4, size,
+                $"LiteRtUnrankedTensorType のサイズが想定と異なります: {size} bytes (期待値: 4)");
+        }
+
+        [Test]
+        public void LiteRtQuantizationPerTensor_SizeIs16Bytes()
+        {
+            // float(4) + パディング(4) + int64_t(8) = 16
+            int size = Marshal.SizeOf<LiteRtQuantizationPerTensor>();
+            Assert.AreEqual(16, size,
+                $"LiteRtQuantizationPerTensor のサイズが想定と異なります: {size} bytes (期待値: 16)");
+        }
+
+        [Test]
+        public void LiteRtApiVersion_SizeIs12Bytes()
+        {
+            // int(4) * 3 = 12
+            int size = Marshal.SizeOf<LiteRtApiVersion>();
+            Assert.AreEqual(12, size,
+                $"LiteRtApiVersion のサイズが想定と異なります: {size} bytes (期待値: 12)");
+        }
+
+        [Test]
+        public void LiteRtLayout_RankAndHasStrides_BitField()
+        {
+            // デフォルト構築で rank=0, has_strides=false であることを確認
+            var layout = new LiteRtLayout();
+            Assert.AreEqual(0, layout.Rank);
+            Assert.IsFalse(layout.HasStrides);
+        }
+    }
+}
