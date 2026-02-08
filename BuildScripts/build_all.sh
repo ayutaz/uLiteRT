@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Copyright 2025 ayutaz
+# Licensed under the Apache License, Version 2.0
+# See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0
+
 # LiteRT C API ネイティブライブラリの Docker ビルドを起動し、
 # 成果物を Assets/Plugins/ にコピーするスクリプト
 set -euo pipefail

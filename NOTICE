@@ -1,0 +1,6 @@
+uLiteRT - Unity C# Bindings for Google LiteRT
+Copyright 2025 ayutaz
+
+This project includes software developed by Google AI Edge:
+  LiteRT (https://github.com/google-ai-edge/LiteRT)
+  Licensed under the Apache License, Version 2.0

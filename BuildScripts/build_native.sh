@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Copyright 2025 ayutaz
+# Licensed under the Apache License, Version 2.0
+# See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0
+
 # Docker コンテナ内で実行される LiteRT C API ビルドスクリプト
 # Android arm64 と Linux x86_64 の共有ライブラリをビルドする
 set -euo pipefail

@@ -1,4 +1,9 @@
 @echo off
+
+REM Copyright 2025 ayutaz
+REM Licensed under the Apache License, Version 2.0
+REM See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0
+
 REM Windows x86_64 向け LiteRT C API DLL ビルドスクリプト
 REM 前提: Bazel がインストール済み、LiteRT ソースが LITERT_DIR に存在すること
 

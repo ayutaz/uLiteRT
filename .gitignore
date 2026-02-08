@@ -47,3 +47,7 @@ Assets/Plugins/**/*.framework/
 
 # Bazel
 /bazel-*/
+
+# Claude Code / MCP
+.claude/
+.mcp.json

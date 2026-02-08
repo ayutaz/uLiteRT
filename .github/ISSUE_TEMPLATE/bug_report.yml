@@ -1,0 +1,69 @@
+name: バグ報告
+description: バグの報告
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: バグの説明
+      description: バグの内容を説明してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現する手順を記述してください
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来どのように動作すべきかを記述してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際にどのように動作したかを記述してください
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Unity バージョン
+      options:
+        - 6000.3.x
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: プラットフォーム
+      options:
+        - Android
+        - Windows
+        - macOS
+        - iOS
+        - Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 追加情報
+      description: ログ、スクリーンショット等があれば添付してください
+    validations:
+      required: false

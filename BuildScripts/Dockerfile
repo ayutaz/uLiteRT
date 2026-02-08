@@ -1,3 +1,7 @@
+# Copyright 2025 ayutaz
+# Licensed under the Apache License, Version 2.0
+# See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0
+
 # uLiteRT ネイティブライブラリビルド用 Dockerfile
 # LiteRT の hermetic_build.Dockerfile をベースに、C API 共有ライブラリをビルドする
 #

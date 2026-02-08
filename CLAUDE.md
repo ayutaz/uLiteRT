@@ -8,7 +8,7 @@ uLiteRT は、Google の LiteRT（旧 TensorFlow Lite）の新 CompiledModel C A
 Android / iOS / Windows をターゲットとし、CPU・GPU・NPU アクセラレーションに対応する。
 
 - **LiteRT リポジトリ:** https://github.com/google-ai-edge/LiteRT
-- **設計ドキュメント:** `C:\Users\yuta\Desktop\Private\LiteRT\docs\unity-binding-guide.md`
+- **設計ドキュメント:** `../LiteRT/docs/unity-binding-guide.md`
 
 ## 開発環境
 
@@ -26,7 +26,7 @@ Android / iOS / Windows をターゲットとし、CPU・GPU・NPU アクセラ�
 
 ### ネイティブライブラリビルド
 
-LiteRT ソースは `C:\Users\yuta\Desktop\Private\LiteRT\` に配置されている前提。
+LiteRT ソースは `../LiteRT/`（uLiteRT と同階層）に配置されている前提。
 現在 LiteRT **v2.1.2** タグでビルド確認済み（main ブランチには `fp16.h` 再定義バグあり）。
 
 ```bash
