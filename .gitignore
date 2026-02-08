@@ -48,6 +48,11 @@ Assets/Plugins/**/*.framework/
 # Bazel
 /bazel-*/
 
+# サンプルモデル・ラベルファイル (ビルドスクリプトでダウンロード)
+Assets/StreamingAssets/LiteRT/Models/
+Assets/StreamingAssets/LiteRT/Labels/
+Assets/StreamingAssets/LiteRT/TTS/
+
 # Claude Code / MCP
 .claude/
 .mcp.json

@@ -1,0 +1,62 @@
+# Copyright 2025 ayutaz
+# Licensed under the Apache License, Version 2.0
+# See LICENSE file or http://www.apache.org/licenses/LICENSE-2.0
+
+# uLiteRT Windows DLL ビルド用 Dockerfile
+# Windows Server Core + VS Build Tools + Python 3.11 + Git + Bazelisk
+#
+# 使い方:
+#   BuildScripts\build_windows_dll.bat を実行
+
+# escape=`
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+SHELL ["cmd", "/S", "/C"]
+
+# VS 2022 Build Tools (VCTools + Windows SDK)
+# https://learn.microsoft.com/visualstudio/install/use-command-line-parameters-to-install-visual-studio
+RUN curl -SL --output vs_buildtools.exe https://aka.ms/vs/17/release/vs_buildtools.exe `
+    && start /wait vs_buildtools.exe --quiet --wait --norestart --nocache `
+        --add Microsoft.VisualStudio.Workload.VCTools `
+        --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+        --add Microsoft.VisualStudio.Component.Windows11SDK.22621 `
+    || IF "%ERRORLEVEL%"=="3010" EXIT 0 `
+    && del /q vs_buildtools.exe
+
+# msvc_compat.h 配置ディレクトリ作成
+RUN mkdir "C:\BuildTools\LiteRT-LM"
+
+# Python 3.11
+RUN curl -SL --output python-3.11.9-amd64.exe https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe `
+    && start /wait python-3.11.9-amd64.exe /quiet InstallAllUsers=1 TargetDir="C:\Program Files\Python311" PrependPath=1 `
+    && del /q python-3.11.9-amd64.exe
+
+# Git for Windows
+RUN curl -SL --output Git-2.47.1-64-bit.exe https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/Git-2.47.1-64-bit.exe `
+    && start /wait Git-2.47.1-64-bit.exe /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /DIR="C:\Program Files\Git" `
+    && del /q Git-2.47.1-64-bit.exe
+
+# Bazelisk (bazel.exe として配置)
+RUN mkdir "C:\tools" `
+    && curl -SL --output "C:\tools\bazel.exe" https://github.com/bazelbuild/bazelisk/releases/download/v1.25.0/bazelisk-windows-amd64.exe
+
+# PATH 設定
+RUN setx /M PATH "%PATH%;C:\Program Files\Python311;C:\Program Files\Git\bin;C:\Program Files\Git\cmd;C:\tools"
+
+# 環境変数
+ENV PYTHON_BIN_PATH="C:/Program Files/Python311/python.exe"
+ENV PYTHON_LIB_PATH="C:/Program Files/Python311/Lib"
+ENV TF_NEED_CUDA=0
+ENV TF_NEED_ROCM=0
+ENV TF_DOWNLOAD_CLANG=0
+ENV TF_SET_ANDROID_WORKSPACE=0
+ENV TF_CONFIGURE_IOS=0
+ENV TF_NEED_CLANG=0
+ENV USE_BAZEL_VERSION=7.4.1
+ENV BAZEL_VC="C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC"
+
+WORKDIR C:\\litert_build
+
+COPY BuildScripts/build_native_windows.bat C:/build_native_windows.bat
+
+CMD ["cmd", "/C", "C:\\build_native_windows.bat"]
