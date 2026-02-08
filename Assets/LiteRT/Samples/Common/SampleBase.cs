@@ -68,6 +68,13 @@ namespace LiteRT.Samples
                 return;
             }
 
+            // GPU 対応デバイスならデフォルトを GPU にする
+            if (SystemInfo.supportsComputeShaders)
+            {
+                selectedAccelerator = LiteRtHwAccelerators.Gpu;
+                _acceleratorIndex = 1; // GPU
+            }
+
             if (!string.IsNullOrEmpty(modelFileName) && File.Exists(ModelPath))
             {
                 LoadModel();
@@ -114,7 +121,22 @@ namespace LiteRT.Samples
                 Environment = new LiteRtEnvironment();
                 Model = LiteRtModel.FromFile(ModelPath);
                 Options = CreateOptions();
-                CompiledModel = new LiteRtCompiledModel(Environment, Model, Options);
+
+                try
+                {
+                    CompiledModel = new LiteRtCompiledModel(Environment, Model, Options);
+                }
+                catch (LiteRtException) when ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                {
+                    // GPU コンパイル失敗 → CPU フォールバック
+                    Log("GPU コンパイル失敗。CPU にフォールバックします。");
+                    selectedAccelerator = LiteRtHwAccelerators.Cpu;
+                    _acceleratorIndex = 0;
+                    Options.Dispose();
+                    Options = CreateOptions();
+                    CompiledModel = new LiteRtCompiledModel(Environment, Model, Options);
+                }
+
                 IsModelLoaded = true;
 
                 Log($"モデル読み込み完了: {modelFileName}");
@@ -150,6 +172,12 @@ namespace LiteRT.Samples
                 var cpuOpts = new CpuOptions();
                 cpuOpts.SetNumThreads(cpuThreadCount);
                 options.AddCpuOptions(cpuOpts);
+            }
+
+            if ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+            {
+                var gpuOpts = new GpuOptions();
+                options.AddGpuOptions(gpuOpts);
             }
 
             return options;

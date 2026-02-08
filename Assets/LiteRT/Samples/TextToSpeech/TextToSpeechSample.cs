@@ -107,7 +107,28 @@ namespace LiteRT.Samples
                     _fsOptions.AddCpuOptions(cpuOpts);
                 }
 
-                _fsCompiled = new LiteRtCompiledModel(Environment, _fsModel, _fsOptions);
+                if ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                {
+                    var gpuOpts = new GpuOptions();
+                    _fsOptions.AddGpuOptions(gpuOpts);
+                }
+
+                try
+                {
+                    _fsCompiled = new LiteRtCompiledModel(Environment, _fsModel, _fsOptions);
+                }
+                catch (LiteRtException) when ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                {
+                    Log("FastSpeech2: GPU コンパイル失敗。CPU にフォールバックします。");
+                    _fsOptions.Dispose();
+                    _fsOptions = new LiteRtOptions()
+                        .SetHardwareAccelerators(LiteRtHwAccelerators.Cpu);
+                    var cpuOpts = new CpuOptions();
+                    cpuOpts.SetNumThreads(cpuThreadCount);
+                    _fsOptions.AddCpuOptions(cpuOpts);
+                    _fsCompiled = new LiteRtCompiledModel(Environment, _fsModel, _fsOptions);
+                }
+
                 _isFsLoaded = true;
 
                 int numOutputs = _fsModel.GetNumOutputs();

@@ -98,7 +98,27 @@ namespace LiteRT.Samples
                     _predictOptions.AddCpuOptions(cpuOpts);
                 }
 
-                _predictCompiled = new LiteRtCompiledModel(Environment, _predictModel, _predictOptions);
+                if ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                {
+                    var gpuOpts = new GpuOptions();
+                    _predictOptions.AddGpuOptions(gpuOpts);
+                }
+
+                try
+                {
+                    _predictCompiled = new LiteRtCompiledModel(Environment, _predictModel, _predictOptions);
+                }
+                catch (LiteRtException) when ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                {
+                    Log("Predict: GPU コンパイル失敗。CPU にフォールバックします。");
+                    _predictOptions.Dispose();
+                    _predictOptions = new LiteRtOptions()
+                        .SetHardwareAccelerators(LiteRtHwAccelerators.Cpu);
+                    var cpuOpts = new CpuOptions();
+                    cpuOpts.SetNumThreads(cpuThreadCount);
+                    _predictOptions.AddCpuOptions(cpuOpts);
+                    _predictCompiled = new LiteRtCompiledModel(Environment, _predictModel, _predictOptions);
+                }
 
                 _predictInputBuffer?.Dispose();
                 _predictOutputBuffer?.Dispose();
