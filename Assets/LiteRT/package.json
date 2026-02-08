@@ -1,0 +1,22 @@
+{
+  "name": "com.ayutaz.ulitert",
+  "version": "0.1.0",
+  "displayName": "uLiteRT",
+  "description": "Unity C# bindings for Google LiteRT (formerly TensorFlow Lite) CompiledModel C API",
+  "unity": "6000.3",
+  "author": {
+    "name": "ayutaz",
+    "url": "https://github.com/ayutaz"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ayutaz/uLiteRT.git"
+  },
+  "keywords": [
+    "litert",
+    "tflite",
+    "inference",
+    "machine-learning"
+  ]
+}
