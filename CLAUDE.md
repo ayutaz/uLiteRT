@@ -90,7 +90,7 @@ Assets/Plugins/
 
 ```
 Assets/LiteRT/Runtime/
-  Native.cs                  — 全 P/Invoke 宣言 (static class)              [実装済み]
+  Native.cs                  — 全 P/Invoke 宣言 (internal static class)     [実装済み]
   Enums.cs                   — LiteRtStatus, LiteRtHwAccelerators 等        [実装済み]
   Structs.cs                 — LiteRtLayout, LiteRtRankedTensorType 等      [実装済み]
   LiteRtException.cs         — ステータス → 例外変換                        [実装済み]
@@ -99,12 +99,18 @@ Assets/LiteRT/Runtime/
   LiteRtOptions.cs           — コンパイルオプションビルダー                 [実装済み]
   LiteRtCompiledModel.cs     — 推論実行の高レベル API                       [実装済み]
   LiteRtTensorBuffer.cs      — バッファ管理 (Lock/Unlock/Dispose)           [実装済み]
-  GpuOptions.cs              — GPU 固有オプション                           [未実装]
-  CpuOptions.cs              — CPU 固有オプション                           [未実装]
+  GpuOptions.cs              — GPU 固有オプション                           [実装済み]
+  CpuOptions.cs              — CPU 固有オプション                           [実装済み]
+  RuntimeOptions.cs           — ランタイム固有オプション                     [実装済み]
+  LiteRtTensorInfo.cs         — テンソルメタデータ（読み取り専用）           [実装済み]
 
 Assets/LiteRT/Tests/Runtime/
   StructLayoutTests.cs       — 構造体サイズ・オフセット検証                 [実装済み]
   EnumTests.cs               — 列挙値の C ヘッダーとの一致検証              [実装済み]
+  NewEnumTests.cs            — 拡張 enum の値検証                           [実装済み]
+  StructOperationTests.cs    — 構造体操作テスト                             [実装済み]
+  ExceptionTests.cs          — 例外変換テスト                               [実装済み]
+  InputValidationTests.cs    — 入力バリデーションテスト                     [実装済み]
 ```
 
 ### API呼び出しフロー

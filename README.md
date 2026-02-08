@@ -58,11 +58,11 @@ using LiteRT;
 using var environment = new LiteRtEnvironment();
 
 // 2. Load model
-using var model = new LiteRtModel(environment, modelBytes);
+using var model = LiteRtModel.FromFile(modelPath);
 
 // 3. Configure options
 using var options = new LiteRtOptions();
-options.AddHwAccelerator(LiteRtHwAccelerators.kLiteRtHwAcceleratorCpu);
+options.SetHardwareAccelerators(LiteRtHwAccelerators.kLiteRtHwAcceleratorCpu);
 
 // 4. Compile model
 using var compiledModel = new LiteRtCompiledModel(environment, model, options);

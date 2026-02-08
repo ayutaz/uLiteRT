@@ -58,11 +58,11 @@ using LiteRT;
 using var environment = new LiteRtEnvironment();
 
 // 2. モデルの読み込み
-using var model = new LiteRtModel(environment, modelBytes);
+using var model = LiteRtModel.FromFile(modelPath);
 
 // 3. オプションの設定
 using var options = new LiteRtOptions();
-options.AddHwAccelerator(LiteRtHwAccelerators.kLiteRtHwAcceleratorCpu);
+options.SetHardwareAccelerators(LiteRtHwAccelerators.kLiteRtHwAcceleratorCpu);
 
 // 4. モデルのコンパイル
 using var compiledModel = new LiteRtCompiledModel(environment, model, options);
