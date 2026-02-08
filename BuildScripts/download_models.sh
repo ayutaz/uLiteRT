@@ -62,7 +62,7 @@ fi
 
 # 3. DeepLab V3
 download_file \
-    "https://storage.googleapis.com/tfhub-lite-models/tensorflow/lite-model/deeplabv3/1/metadata/2.tflite" \
+    "https://tfhub.dev/tensorflow/lite-model/deeplabv3/1/metadata/2?lite-format=tflite" \
     "${MODELS_DIR}/deeplabv3.tflite"
 
 # 4. PoseNet
@@ -72,17 +72,17 @@ download_file \
 
 # 5. Style Predict
 download_file \
-    "https://storage.googleapis.com/tfhub-lite-models/google/lite-model/magenta/arbitrary-image-stylization-v1-256/int8/prediction/1.tflite" \
+    "https://tfhub.dev/google/lite-model/magenta/arbitrary-image-stylization-v1-256/int8/prediction/1?lite-format=tflite" \
     "${MODELS_DIR}/style_predict.tflite"
 
 # 6. Style Transfer
 download_file \
-    "https://storage.googleapis.com/tfhub-lite-models/google/lite-model/magenta/arbitrary-image-stylization-v1-256/int8/transfer/1.tflite" \
+    "https://tfhub.dev/google/lite-model/magenta/arbitrary-image-stylization-v1-256/int8/transfer/1?lite-format=tflite" \
     "${MODELS_DIR}/style_transfer.tflite"
 
 # 7. YAMNet
 download_file \
-    "https://storage.googleapis.com/tfhub-lite-models/google/lite-model/yamnet/classification/tflite/1.tflite" \
+    "https://tfhub.dev/google/lite-model/yamnet/classification/tflite/1?lite-format=tflite" \
     "${MODELS_DIR}/yamnet.tflite"
 
 # 8. FastSpeech2 + MB-MelGAN
@@ -92,8 +92,8 @@ if [ ! -f "${MODELS_DIR}/fastspeech2.tflite" ] || [ ! -f "${MODELS_DIR}/mb_melga
         "https://github.com/luan78zaoha/TTS_tflite_cpp/releases/download/0.1.0/models.zip"
     unzip -qo "${TEMP_DIR}/tts_models.zip" -d "${TEMP_DIR}/tts_models"
     # zip 内のファイル名を探してコピー
-    find "${TEMP_DIR}/tts_models" -name "*fastspeech2*" -name "*.tflite" -exec cp {} "${MODELS_DIR}/fastspeech2.tflite" \;
-    find "${TEMP_DIR}/tts_models" -name "*mb_melgan*" -name "*.tflite" -exec cp {} "${MODELS_DIR}/mb_melgan.tflite" \;
+    find "${TEMP_DIR}/tts_models" -name "*fastspeech2*.tflite" -exec cp {} "${MODELS_DIR}/fastspeech2.tflite" \;
+    find "${TEMP_DIR}/tts_models" -name "*mb_melgan*.tflite" -exec cp {} "${MODELS_DIR}/mb_melgan.tflite" \;
 else
     echo "  スキップ（既存）: fastspeech2.tflite + mb_melgan.tflite"
 fi

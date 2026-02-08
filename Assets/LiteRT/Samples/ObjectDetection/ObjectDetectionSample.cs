@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace LiteRT.Samples
@@ -60,6 +61,10 @@ namespace LiteRT.Samples
         {
             return "物体検出 — SSD MobileNet V1";
         }
+
+        // SSD MobileNet V1 の既知の出力 float 数（動的形状モデル対応）
+        // boxes[1,10,4]=40, classes[1,10]=10, scores[1,10]=10, num_detections[1]=1
+        private static readonly int[] ExpectedOutputFloats = { 40, 10, 10, 1 };
 
         protected override void OnModelLoaded()
         {
@@ -159,10 +164,12 @@ namespace LiteRT.Samples
                     _outputBuffers);
 
                 // 出力解析: boxes[1,10,4], classes[1,10], scores[1,10], num_detections[1]
-                var boxes = _outputBuffers[0].ReadFloat();
-                var classes = _outputBuffers[1].ReadFloat();
-                var scores = _outputBuffers[2].ReadFloat();
-                var numDetections = _outputBuffers[3].ReadFloat();
+                // 動的形状モデルでは PackedSize が実サイズより小さいため
+                // 期待される要素数を明示して Lock/Marshal.Copy で読む
+                var boxes = ReadOutputFloat(_outputBuffers[0], ExpectedOutputFloats[0]);
+                var classes = ReadOutputFloat(_outputBuffers[1], ExpectedOutputFloats[1]);
+                var scores = ReadOutputFloat(_outputBuffers[2], ExpectedOutputFloats[2]);
+                var numDetections = ReadOutputFloat(_outputBuffers[3], ExpectedOutputFloats[3]);
 
                 int count = Mathf.Min((int)numDetections[0], 10);
                 for (int i = 0; i < count; i++)
@@ -187,6 +194,21 @@ namespace LiteRT.Samples
             {
                 ErrorMessage = $"推論エラー: {e.Message}";
                 Log(ErrorMessage);
+            }
+        }
+
+        private static float[] ReadOutputFloat(LiteRtTensorBuffer buffer, int expectedCount)
+        {
+            IntPtr ptr = buffer.Lock(LiteRtTensorBufferLockMode.Read);
+            try
+            {
+                var result = new float[expectedCount];
+                Marshal.Copy(ptr, result, 0, expectedCount);
+                return result;
+            }
+            finally
+            {
+                buffer.Unlock();
             }
         }
 

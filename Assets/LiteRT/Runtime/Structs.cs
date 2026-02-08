@@ -54,6 +54,24 @@ namespace LiteRT
         public bool HasStrides => (_rankAndFlags & 0x80) != 0;
 
         /// <summary>
+        /// 指定された次元でレイアウトを作成する。
+        /// </summary>
+        public static LiteRtLayout Create(params int[] dims)
+        {
+            if (dims == null || dims.Length > 8)
+                throw new ArgumentException("次元数は 0〜8 の範囲で指定してください。");
+            var layout = new LiteRtLayout
+            {
+                _rankAndFlags = (uint)dims.Length,
+                dimensions = new int[8],
+                strides = new uint[8]
+            };
+            for (int i = 0; i < dims.Length; i++)
+                layout.dimensions[i] = dims[i];
+            return layout;
+        }
+
+        /// <summary>
         /// dimensions[0..Rank-1] を int[] として取得する。
         /// </summary>
         public int[] GetDimensions()
