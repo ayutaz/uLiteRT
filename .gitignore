@@ -40,19 +40,23 @@ crashlytics-build.properties
 # ネイティブライブラリバイナリ (ビルド成果物)
 # ============================================================
 Assets/Plugins/**/*.dll
+Assets/Plugins/**/*.dll.meta
 Assets/Plugins/**/*.so
+Assets/Plugins/**/*.so.meta
 Assets/Plugins/**/*.dylib
+Assets/Plugins/**/*.dylib.meta
 Assets/Plugins/**/*.a
+Assets/Plugins/**/*.a.meta
 Assets/Plugins/**/*.framework/
 
 # Bazel
 /bazel-*/
 
 # サンプルモデル・ラベルファイル (ビルドスクリプトでダウンロード)
-Assets/StreamingAssets/LiteRT/Models/
-Assets/StreamingAssets/LiteRT/Labels/
-Assets/StreamingAssets/LiteRT/TTS/
+Assets/StreamingAssets/
 
 # Claude Code / MCP
 .claude/
 .mcp.json
+.uloop/
+nul
