@@ -152,4 +152,67 @@ namespace LiteRT
         PerChannel = 2,
         BlockWise = 3,
     }
+
+    /// <summary>
+    /// GPU バックエンドの種別。
+    /// </summary>
+    public enum LiteRtGpuBackend : int
+    {
+        Automatic = 0,
+        OpenCl = 1,
+        WebGpu = 2,
+        OpenGl = 3,
+    }
+
+    /// <summary>
+    /// GPU 実行優先度。
+    /// </summary>
+    public enum LiteRtGpuPriority : int
+    {
+        Default = 0,
+        Low = 1,
+        Normal = 2,
+        High = 3,
+    }
+
+    /// <summary>
+    /// デリゲートの計算精度。
+    /// </summary>
+    public enum LiteRtDelegatePrecision : int
+    {
+        Default = 0,
+        Fp16 = 1,
+        Fp32 = 2,
+    }
+
+    /// <summary>
+    /// GPU 待機方式。
+    /// </summary>
+    public enum LiteRtGpuWaitType : int
+    {
+        Default = 0,
+        Passive = 1,
+        Active = 2,
+        DoNotWait = 3,
+    }
+
+    /// <summary>
+    /// エラーレポータのモード。
+    /// </summary>
+    public enum LiteRtErrorReporterMode : int
+    {
+        None = 0,
+        Stderr = 1,
+        Buffer = 2,
+    }
+
+    /// <summary>
+    /// デリゲートバッファのストレージ種別。
+    /// </summary>
+    public enum LiteRtDelegateBufferStorageType : int
+    {
+        Default = 0,
+        Buffer = 1,
+        Texture2D = 2,
+    }
 }

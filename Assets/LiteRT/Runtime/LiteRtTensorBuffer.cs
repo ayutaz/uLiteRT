@@ -203,6 +203,133 @@ namespace LiteRT
             }
         }
 
+        /// <summary>
+        /// バッファ要件から LiteRT 管理のテンソルバッファを作成する（推奨）。
+        /// アライメント要件が自動的に処理される。
+        /// </summary>
+        public static LiteRtTensorBuffer CreateFromRequirements(
+            LiteRtEnvironment environment,
+            ref LiteRtRankedTensorType tensorType,
+            IntPtr requirements)
+        {
+            if (environment == null) throw new ArgumentNullException(nameof(environment));
+            environment.ThrowIfDisposed();
+
+            LiteRtException.CheckStatus(
+                Native.LiteRtCreateManagedTensorBufferFromRequirements(
+                    environment.Handle, ref tensorType, requirements, out var handle));
+            return new LiteRtTensorBuffer(handle);
+        }
+
+        /// <summary>
+        /// ホストメモリからテンソルバッファを作成する。
+        /// hostBuffer は 64 バイトアライメントが必須。
+        /// </summary>
+        public static LiteRtTensorBuffer CreateFromHostMemory(
+            ref LiteRtRankedTensorType tensorType,
+            IntPtr hostBuffer,
+            UIntPtr size)
+        {
+            LiteRtException.CheckStatus(
+                Native.LiteRtCreateTensorBufferFromHostMemory(
+                    ref tensorType, hostBuffer, size, IntPtr.Zero, out var handle));
+            return new LiteRtTensorBuffer(handle);
+        }
+
+        /// <summary>テンソルの型情報を取得する。</summary>
+        public LiteRtRankedTensorType TensorType
+        {
+            get
+            {
+                ThrowIfDisposed();
+                LiteRtException.CheckStatus(
+                    Native.LiteRtGetTensorBufferTensorType(Handle, out var tensorType));
+                return tensorType;
+            }
+        }
+
+        /// <summary>バッファの非パックサイズ（バイト）を取得する。</summary>
+        public int Size
+        {
+            get
+            {
+                ThrowIfDisposed();
+                LiteRtException.CheckStatus(
+                    Native.LiteRtGetTensorBufferSize(Handle, out var size));
+                return (int)(ulong)size;
+            }
+        }
+
+        /// <summary>テンソルバッファを複製する。</summary>
+        public LiteRtTensorBuffer Duplicate()
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtDuplicateTensorBuffer(Handle, out var newHandle));
+            return new LiteRtTensorBuffer(newHandle);
+        }
+
+        /// <summary>テンソルバッファの内容をクリアする。</summary>
+        public void Clear()
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtClearTensorBuffer(Handle));
+        }
+
+        /// <summary>バッファにイベントが関連付けられているかどうか。</summary>
+        public bool HasEvent()
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtHasTensorBufferEvent(Handle, out var hasEvent));
+            return hasEvent;
+        }
+
+        /// <summary>バッファに関連付けられたイベントハンドルを取得する。</summary>
+        public IntPtr GetEvent()
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtGetTensorBufferEvent(Handle, out var eventHandle));
+            return eventHandle;
+        }
+
+        /// <summary>バッファにイベントを設定する。バッファが所有権を取得する。</summary>
+        public void SetEvent(IntPtr eventHandle)
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtSetTensorBufferEvent(Handle, eventHandle));
+        }
+
+        /// <summary>バッファからイベントをクリアする。</summary>
+        public void ClearEvent()
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtClearTensorBufferEvent(Handle));
+        }
+
+        /// <summary>イベントがシグナル状態かどうかを確認する。</summary>
+        public static bool IsEventSignaled(IntPtr eventHandle)
+        {
+            LiteRtException.CheckStatus(
+                Native.LiteRtIsEventSignaled(eventHandle, out var signaled));
+            return signaled;
+        }
+
+        /// <summary>
+        /// イベントの完了を待機する。
+        /// </summary>
+        /// <param name="eventHandle">イベントハンドル。</param>
+        /// <param name="timeoutMs">タイムアウト（ミリ秒）。-1 で無期限。</param>
+        public static void WaitEvent(IntPtr eventHandle, long timeoutMs = -1)
+        {
+            LiteRtException.CheckStatus(
+                Native.LiteRtWaitEvent(eventHandle, timeoutMs));
+        }
+
         /// <summary>バッファが有効（Dispose 済みでない）かどうか。</summary>
         public bool IsValid => !_disposed && Handle != IntPtr.Zero;
 
