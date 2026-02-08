@@ -99,7 +99,7 @@ namespace LiteRT
         /// <summary>オプションが有効（Dispose 済みでない）かどうか。</summary>
         public bool IsValid => !_disposed && Handle != IntPtr.Zero;
 
-        private void ThrowIfDisposed()
+        internal void ThrowIfDisposed()
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(GpuOptions));
@@ -110,9 +110,13 @@ namespace LiteRT
             if (_disposed) return;
             _disposed = true;
 
-            // AddOpaqueOptions で所有権が移譲された場合は native destroy 不要
-            // GPU options には個別の Destroy 関数がないため、
-            // Options 側で一括破棄される
+            if (!_ownershipTransferred && Handle != IntPtr.Zero)
+            {
+                // 個別 Destroy がないため、所有権移譲なしの破棄はリーク
+                UnityEngine.Debug.LogWarning(
+                    "GpuOptions: LiteRtOptions に追加されずに破棄されました。ネイティブメモリがリークします。");
+            }
+
             Handle = IntPtr.Zero;
         }
     }

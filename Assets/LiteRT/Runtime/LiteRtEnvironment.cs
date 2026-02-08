@@ -34,6 +34,8 @@ namespace LiteRT
                 throw new ObjectDisposedException(nameof(LiteRtEnvironment));
         }
 
+        ~LiteRtEnvironment() { Dispose(); }
+
         public void Dispose()
         {
             if (_disposed) return;
@@ -44,6 +46,8 @@ namespace LiteRT
                 Native.LiteRtDestroyEnvironment(Handle);
                 Handle = IntPtr.Zero;
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }

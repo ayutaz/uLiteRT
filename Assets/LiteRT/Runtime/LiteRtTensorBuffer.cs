@@ -41,7 +41,8 @@ namespace LiteRT
                 Native.LiteRtCreateManagedTensorBuffer(
                     environment.Handle, bufferType, ref tensorType, bufferSize,
                     out var handle));
-            return new LiteRtTensorBuffer(handle);
+            try { return new LiteRtTensorBuffer(handle); }
+            catch { Native.LiteRtDestroyTensorBuffer(handle); throw; }
         }
 
         /// <summary>
@@ -121,7 +122,7 @@ namespace LiteRT
 
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferPackedSize(Handle, out var packedSize));
-            int floatCount = (int)(ulong)packedSize / sizeof(float);
+            int floatCount = checked((int)(ulong)packedSize) / sizeof(float);
 
             IntPtr hostPtr = Lock(LiteRtTensorBufferLockMode.Read);
             try
@@ -164,7 +165,7 @@ namespace LiteRT
 
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferPackedSize(Handle, out var packedSize));
-            int byteCount = (int)(ulong)packedSize;
+            int byteCount = checked((int)(ulong)packedSize);
 
             IntPtr hostPtr = Lock(LiteRtTensorBufferLockMode.Read);
             try
@@ -199,7 +200,7 @@ namespace LiteRT
                 ThrowIfDisposed();
                 LiteRtException.CheckStatus(
                     Native.LiteRtGetTensorBufferPackedSize(Handle, out var size));
-                return (int)(ulong)size;
+                return checked((int)(ulong)size);
             }
         }
 
@@ -218,7 +219,8 @@ namespace LiteRT
             LiteRtException.CheckStatus(
                 Native.LiteRtCreateManagedTensorBufferFromRequirements(
                     environment.Handle, ref tensorType, requirements, out var handle));
-            return new LiteRtTensorBuffer(handle);
+            try { return new LiteRtTensorBuffer(handle); }
+            catch { Native.LiteRtDestroyTensorBuffer(handle); throw; }
         }
 
         /// <summary>
@@ -233,7 +235,8 @@ namespace LiteRT
             LiteRtException.CheckStatus(
                 Native.LiteRtCreateTensorBufferFromHostMemory(
                     ref tensorType, hostBuffer, size, IntPtr.Zero, out var handle));
-            return new LiteRtTensorBuffer(handle);
+            try { return new LiteRtTensorBuffer(handle); }
+            catch { Native.LiteRtDestroyTensorBuffer(handle); throw; }
         }
 
         /// <summary>テンソルの型情報を取得する。</summary>
@@ -256,17 +259,22 @@ namespace LiteRT
                 ThrowIfDisposed();
                 LiteRtException.CheckStatus(
                     Native.LiteRtGetTensorBufferSize(Handle, out var size));
-                return (int)(ulong)size;
+                return checked((int)(ulong)size);
             }
         }
 
-        /// <summary>テンソルバッファを複製する。</summary>
+        /// <summary>
+        /// テンソルバッファを複製する。
+        /// 参照カウントが増加され、同じネイティブバッファを指す新ラッパーを返す。
+        /// 各ラッパーの Dispose() が DestroyTensorBuffer を呼び、参照カウントをデクリメントする。
+        /// </summary>
         public LiteRtTensorBuffer Duplicate()
         {
             ThrowIfDisposed();
             LiteRtException.CheckStatus(
-                Native.LiteRtDuplicateTensorBuffer(Handle, out var newHandle));
-            return new LiteRtTensorBuffer(newHandle);
+                Native.LiteRtDuplicateTensorBuffer(Handle));
+            // 参照カウント増加済みなので、同じハンドルの新ラッパーを返す
+            return new LiteRtTensorBuffer(Handle);
         }
 
         /// <summary>テンソルバッファの内容をクリアする。</summary>
@@ -339,6 +347,8 @@ namespace LiteRT
                 throw new ObjectDisposedException(nameof(LiteRtTensorBuffer));
         }
 
+        ~LiteRtTensorBuffer() { Dispose(); }
+
         public void Dispose()
         {
             if (_disposed) return;
@@ -349,6 +359,8 @@ namespace LiteRT
                 Native.LiteRtDestroyTensorBuffer(Handle);
                 Handle = IntPtr.Zero;
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }

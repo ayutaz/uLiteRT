@@ -11,11 +11,18 @@ namespace LiteRT
     /// </summary>
     public sealed class LiteRtCompiledModel : IDisposable
     {
+        /// <summary>
+        /// キャンセルコールバック。true を返すと推論がキャンセルされる。
+        /// </summary>
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        public delegate bool CancellationCallback(IntPtr data);
+
         internal IntPtr Handle { get; private set; }
         private bool _disposed;
 
         // キャンセルコールバックを GC から保護するために保持
-        private Native.LiteRtCancellationCallback _cancellationCallback;
+        private CancellationCallback _cancellationCallback;
 
         /// <summary>
         /// モデルをコンパイルして推論可能な状態にする。
@@ -101,18 +108,18 @@ namespace LiteRT
         /// <summary>
         /// バッファ要件から推奨されるバッファ型を取得する。
         /// </summary>
-        public static LiteRtTensorBufferType GetBufferType(IntPtr bufferRequirements, int typeIndex = 0)
+        internal static LiteRtTensorBufferType GetBufferType(IntPtr bufferRequirements, int typeIndex = 0)
         {
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferRequirementsSupportedTensorBufferType(
-                    bufferRequirements, (UIntPtr)typeIndex, out var bufferType));
+                    bufferRequirements, typeIndex, out var bufferType));
             return bufferType;
         }
 
         /// <summary>
         /// バッファ要件から必要なバッファサイズを取得する。
         /// </summary>
-        public static UIntPtr GetBufferSize(IntPtr bufferRequirements)
+        internal static UIntPtr GetBufferSize(IntPtr bufferRequirements)
         {
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferRequirementsBufferSize(
@@ -238,7 +245,7 @@ namespace LiteRT
         /// </summary>
         /// <param name="callback">キャンセル判定コールバック。</param>
         /// <param name="userData">コールバックに渡すユーザーデータ。</param>
-        public void SetCancellationFunction(Native.LiteRtCancellationCallback callback,
+        public void SetCancellationFunction(CancellationCallback callback,
             IntPtr userData = default)
         {
             ThrowIfDisposed();
@@ -277,7 +284,7 @@ namespace LiteRT
         /// <summary>
         /// コンパイル済みモデルのプロファイラハンドルを取得する（CompiledModel が所有）。
         /// </summary>
-        public IntPtr GetProfiler()
+        private IntPtr GetProfiler()
         {
             ThrowIfDisposed();
             LiteRtException.CheckStatus(
@@ -286,35 +293,35 @@ namespace LiteRT
         }
 
         /// <summary>プロファイラを開始する。</summary>
-        public static void StartProfiler(IntPtr profiler)
+        public void StartProfiler()
         {
-            LiteRtException.CheckStatus(Native.LiteRtStartProfiler(profiler));
+            LiteRtException.CheckStatus(Native.LiteRtStartProfiler(GetProfiler()));
         }
 
         /// <summary>プロファイラを停止する。</summary>
-        public static void StopProfiler(IntPtr profiler)
+        public void StopProfiler()
         {
-            LiteRtException.CheckStatus(Native.LiteRtStopProfiler(profiler));
+            LiteRtException.CheckStatus(Native.LiteRtStopProfiler(GetProfiler()));
         }
 
         /// <summary>プロファイラをリセットする。</summary>
-        public static void ResetProfiler(IntPtr profiler)
+        public void ResetProfiler()
         {
-            LiteRtException.CheckStatus(Native.LiteRtResetProfiler(profiler));
+            LiteRtException.CheckStatus(Native.LiteRtResetProfiler(GetProfiler()));
         }
 
         /// <summary>プロファイラのイベント数を取得する。</summary>
-        public static int GetNumProfilerEvents(IntPtr profiler)
+        public int GetNumProfilerEvents()
         {
             LiteRtException.CheckStatus(
-                Native.LiteRtGetNumProfilerEvents(profiler, out var count));
-            return (int)(ulong)count;
+                Native.LiteRtGetNumProfilerEvents(GetProfiler(), out var count));
+            return checked((int)(ulong)count);
         }
 
         /// <summary>
         /// バッファ要件からアライメントを取得する。
         /// </summary>
-        public static UIntPtr GetBufferAlignment(IntPtr bufferRequirements)
+        internal static UIntPtr GetBufferAlignment(IntPtr bufferRequirements)
         {
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferRequirementsAlignment(
@@ -331,6 +338,8 @@ namespace LiteRT
                 throw new ObjectDisposedException(nameof(LiteRtCompiledModel));
         }
 
+        ~LiteRtCompiledModel() { Dispose(); }
+
         public void Dispose()
         {
             if (_disposed) return;
@@ -341,6 +350,8 @@ namespace LiteRT
                 Native.LiteRtDestroyCompiledModel(Handle);
                 Handle = IntPtr.Zero;
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }

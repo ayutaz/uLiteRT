@@ -13,6 +13,7 @@ namespace LiteRT
     {
         internal IntPtr Handle { get; private set; }
         private bool _disposed;
+        private bool _ownershipTransferred;
 
         public CpuOptions()
         {
@@ -36,10 +37,19 @@ namespace LiteRT
             return this;
         }
 
+        /// <summary>
+        /// LiteRtOptions に追加して所有権を移譲する。
+        /// 移譲後は Dispose しても native destroy は呼ばれない。
+        /// </summary>
+        internal void MarkOwnershipTransferred()
+        {
+            _ownershipTransferred = true;
+        }
+
         /// <summary>オプションが有効（Dispose 済みでない）かどうか。</summary>
         public bool IsValid => !_disposed && Handle != IntPtr.Zero;
 
-        private void ThrowIfDisposed()
+        internal void ThrowIfDisposed()
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(CpuOptions));
@@ -49,6 +59,13 @@ namespace LiteRT
         {
             if (_disposed) return;
             _disposed = true;
+
+            if (!_ownershipTransferred && Handle != IntPtr.Zero)
+            {
+                UnityEngine.Debug.LogWarning(
+                    "CpuOptions: LiteRtOptions に追加されずに破棄されました。ネイティブメモリがリークします。");
+            }
+
             Handle = IntPtr.Zero;
         }
     }

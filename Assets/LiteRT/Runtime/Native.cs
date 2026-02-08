@@ -10,7 +10,7 @@ namespace LiteRT
     /// LiteRT ネイティブ C API の P/Invoke 宣言。
     /// Android では "LiteRt"、Windows/macOS では "libLiteRt" をロードする。
     /// </summary>
-    public static class Native
+    internal static class Native
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         private const string LibName = "LiteRt";
@@ -205,15 +205,16 @@ namespace LiteRT
             IntPtr bufferRequirements,
             out UIntPtr bufferSize);
 
-        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
-        public static extern LiteRtStatus LiteRtGetTensorBufferRequirementsNumSupportedTensorBufferTypes(
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl,
+            EntryPoint = "LiteRtGetNumTensorBufferRequirementsSupportedBufferTypes")]
+        public static extern LiteRtStatus LiteRtGetNumTensorBufferRequirementsSupportedBufferTypes(
             IntPtr bufferRequirements,
-            out UIntPtr numTypes);
+            out int numTypes);
 
         [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern LiteRtStatus LiteRtGetTensorBufferRequirementsSupportedTensorBufferType(
             IntPtr bufferRequirements,
-            UIntPtr typeIndex,
+            int typeIndex,
             out LiteRtTensorBufferType bufferType);
 
         // =====================================================================
@@ -398,18 +399,11 @@ namespace LiteRT
             IntPtr compiledModel,
             [MarshalAs(UnmanagedType.I1)] out bool fullyAccelerated);
 
-        /// <summary>
-        /// キャンセルコールバック。true を返すと推論がキャンセルされる。
-        /// </summary>
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        public delegate bool LiteRtCancellationCallback(IntPtr data);
-
         [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern LiteRtStatus LiteRtSetCompiledModelCancellationFunction(
             IntPtr compiledModel,
             IntPtr data,
-            LiteRtCancellationCallback callback);
+            LiteRtCompiledModel.CancellationCallback callback);
 
         [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern LiteRtStatus LiteRtCompiledModelResizeInputTensorNonStrict(
@@ -478,8 +472,7 @@ namespace LiteRT
 
         [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern LiteRtStatus LiteRtDuplicateTensorBuffer(
-            IntPtr tensorBuffer,
-            out IntPtr duplicatedBuffer);
+            IntPtr tensorBuffer);
 
         [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern LiteRtStatus LiteRtClearTensorBuffer(IntPtr buffer);

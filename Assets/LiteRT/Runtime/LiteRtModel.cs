@@ -65,7 +65,7 @@ namespace LiteRT
             ThrowIfDisposed();
             LiteRtException.CheckStatus(
                 Native.LiteRtGetNumModelSignatures(Handle, out var count));
-            return (int)(ulong)count;
+            return checked((int)(ulong)count);
         }
 
         /// <summary>指定インデックスのシグネチャハンドルを取得する（Model が所有）。</summary>
@@ -83,7 +83,7 @@ namespace LiteRT
             var sig = GetSignature(signatureIndex);
             LiteRtException.CheckStatus(
                 Native.LiteRtGetSignatureKey(sig, out var keyPtr));
-            return Marshal.PtrToStringAnsi(keyPtr);
+            return keyPtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(keyPtr) : null;
         }
 
         /// <summary>指定シグネチャの入力テンソル数を取得する。</summary>
@@ -92,7 +92,7 @@ namespace LiteRT
             var sig = GetSignature(signatureIndex);
             LiteRtException.CheckStatus(
                 Native.LiteRtGetNumSignatureInputs(sig, out var count));
-            return (int)(ulong)count;
+            return checked((int)(ulong)count);
         }
 
         /// <summary>指定シグネチャの出力テンソル数を取得する。</summary>
@@ -101,7 +101,7 @@ namespace LiteRT
             var sig = GetSignature(signatureIndex);
             LiteRtException.CheckStatus(
                 Native.LiteRtGetNumSignatureOutputs(sig, out var count));
-            return (int)(ulong)count;
+            return checked((int)(ulong)count);
         }
 
         /// <summary>入力テンソルの名前を取得する。</summary>
@@ -110,7 +110,7 @@ namespace LiteRT
             var sig = GetSignature(signatureIndex);
             LiteRtException.CheckStatus(
                 Native.LiteRtGetSignatureInputName(sig, (UIntPtr)inputIndex, out var namePtr));
-            return Marshal.PtrToStringAnsi(namePtr);
+            return namePtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(namePtr) : null;
         }
 
         /// <summary>出力テンソルの名前を取得する。</summary>
@@ -119,7 +119,7 @@ namespace LiteRT
             var sig = GetSignature(signatureIndex);
             LiteRtException.CheckStatus(
                 Native.LiteRtGetSignatureOutputName(sig, (UIntPtr)outputIndex, out var namePtr));
-            return Marshal.PtrToStringAnsi(namePtr);
+            return namePtr != IntPtr.Zero ? Marshal.PtrToStringAnsi(namePtr) : null;
         }
 
         /// <summary>入力テンソルのランク付き型情報を取得する。</summary>
@@ -153,6 +153,8 @@ namespace LiteRT
                 throw new ObjectDisposedException(nameof(LiteRtModel));
         }
 
+        ~LiteRtModel() { Dispose(); }
+
         public void Dispose()
         {
             if (_disposed) return;
@@ -166,6 +168,8 @@ namespace LiteRT
 
             if (_pinnedBuffer.IsAllocated)
                 _pinnedBuffer.Free();
+
+            GC.SuppressFinalize(this);
         }
     }
 }
