@@ -60,3 +60,7 @@ Assets/StreamingAssets/
 .mcp.json
 .uloop/
 nul
+
+# ローカルツール・録画
+/Recordings/
+/model-inspector/
