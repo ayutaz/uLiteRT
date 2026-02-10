@@ -98,7 +98,7 @@ namespace LiteRT
         /// <summary>
         /// 入力バッファ要件を取得する（CompiledModel が所有、Destroy 不要）。
         /// </summary>
-        internal IntPtr GetInputBufferRequirements(int inputIndex, int signatureIndex = 0)
+        public IntPtr GetInputBufferRequirements(int inputIndex, int signatureIndex = 0)
         {
             ThrowIfDisposed();
             LiteRtException.CheckStatus(
@@ -110,7 +110,7 @@ namespace LiteRT
         /// <summary>
         /// 出力バッファ要件を取得する（CompiledModel が所有、Destroy 不要）。
         /// </summary>
-        internal IntPtr GetOutputBufferRequirements(int outputIndex, int signatureIndex = 0)
+        public IntPtr GetOutputBufferRequirements(int outputIndex, int signatureIndex = 0)
         {
             ThrowIfDisposed();
             LiteRtException.CheckStatus(
@@ -122,7 +122,7 @@ namespace LiteRT
         /// <summary>
         /// バッファ要件から推奨されるバッファ型を取得する。
         /// </summary>
-        internal static LiteRtTensorBufferType GetBufferType(IntPtr bufferRequirements, int typeIndex = 0)
+        public static LiteRtTensorBufferType GetBufferType(IntPtr bufferRequirements, int typeIndex = 0)
         {
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferRequirementsSupportedTensorBufferType(
@@ -133,7 +133,7 @@ namespace LiteRT
         /// <summary>
         /// バッファ要件から必要なバッファサイズを取得する。
         /// </summary>
-        internal static UIntPtr GetBufferSize(IntPtr bufferRequirements)
+        public static UIntPtr GetBufferSize(IntPtr bufferRequirements)
         {
             LiteRtException.CheckStatus(
                 Native.LiteRtGetTensorBufferRequirementsBufferSize(

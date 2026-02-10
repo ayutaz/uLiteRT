@@ -39,7 +39,13 @@ namespace LiteRT
     [StructLayout(LayoutKind.Sequential)]
     public struct LiteRtLayout
     {
-        private uint _rankAndFlags; // 下位7ビット=rank, 8ビット目=has_strides
+        private uint _rankAndFlags; // 下位7ビット=rank, 8ビット目=has_strides (non-Windows)
+
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        // MSVC ABI: bool ビットフィールドは unsigned int と別のアロケーション単位になるため
+        // 4 バイトのパディングが発生する。has_strides はこのフィールドのビット 0 に格納される。
+        private uint _strideFlagAndPadding;
+#endif
 
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
         public int[] dimensions;
@@ -51,7 +57,11 @@ namespace LiteRT
         public int Rank => (int)(_rankAndFlags & 0x7F);
 
         /// <summary>ストライド情報を持つかどうか。</summary>
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+        public bool HasStrides => (_strideFlagAndPadding & 0x01) != 0;
+#else
         public bool HasStrides => (_rankAndFlags & 0x80) != 0;
+#endif
 
         /// <summary>
         /// 指定された次元でレイアウトを作成する。

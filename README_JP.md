@@ -109,6 +109,26 @@ float[] result = outputBuffer.ReadFloat();
 破棄:    TensorBuffer → CompiledModel → Options → Model → Environment（逆順）
 ```
 
+## サンプル
+
+すぐに使える 7 つのサンプルが含まれています。まず必要なモデルをダウンロードしてください:
+
+```bash
+bash BuildScripts/download_models.sh
+```
+
+| サンプル | 説明 | モデル |
+|---|---|---|
+| Image Classification | MobileNet V2 画像分類 | mobilenet_v2.tflite |
+| Object Detection | SSD MobileNet V1 物体検出 | ssd_mobilenet_v1.tflite |
+| Image Segmentation | DeepLab V3 セマンティックセグメンテーション | deeplabv3.tflite |
+| Pose Estimation | PoseNet 姿勢推定 | posenet.tflite |
+| Style Transfer | Magenta スタイル変換 | style_predict/transfer.tflite |
+| Sound Classification | YAMNet 音声分類 | yamnet.tflite |
+| Text-to-Speech | FastSpeech2 + MB-MelGAN 音声合成 | fastspeech2/mb_melgan.tflite |
+
+各サンプルは GPU アクセラレーションを自動選択し、利用できない場合は CPU にフォールバックします。
+
 ## ネイティブライブラリのビルド
 
 ネイティブライブラリはターゲットプラットフォームごとに個別にビルドする必要があります。

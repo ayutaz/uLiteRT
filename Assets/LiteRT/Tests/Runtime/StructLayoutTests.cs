@@ -26,21 +26,33 @@ namespace LiteRT.Tests
     public class StructLayoutTests
     {
         [Test]
-        public void LiteRtLayout_SizeIs68Bytes()
+        public void LiteRtLayout_SizeMatchesNativeABI()
         {
-            // C 側: uint(4) + int32_t[8](32) + uint32_t[8](32) = 68
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // MSVC ABI: uint(4) + padding(4) + int32_t[8](32) + uint32_t[8](32) = 72
+            const int expected = 72;
+#else
+            // GCC/Clang ABI: uint(4) + int32_t[8](32) + uint32_t[8](32) = 68
+            const int expected = 68;
+#endif
             int size = Marshal.SizeOf<LiteRtLayout>();
-            Assert.AreEqual(68, size,
-                $"LiteRtLayout のサイズが想定と異なります: {size} bytes (期待値: 68)");
+            Assert.AreEqual(expected, size,
+                $"LiteRtLayout のサイズが想定と異なります: {size} bytes (期待値: {expected})");
         }
 
         [Test]
-        public void LiteRtRankedTensorType_SizeIs72Bytes()
+        public void LiteRtRankedTensorType_SizeMatchesNativeABI()
         {
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // LiteRtElementType(4) + LiteRtLayout(72) = 76
+            const int expected = 76;
+#else
             // LiteRtElementType(4) + LiteRtLayout(68) = 72
+            const int expected = 72;
+#endif
             int size = Marshal.SizeOf<LiteRtRankedTensorType>();
-            Assert.AreEqual(72, size,
-                $"LiteRtRankedTensorType のサイズが想定と異なります: {size} bytes (期待値: 72)");
+            Assert.AreEqual(expected, size,
+                $"LiteRtRankedTensorType のサイズが想定と異なります: {size} bytes (期待値: {expected})");
         }
 
         [Test]

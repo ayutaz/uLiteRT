@@ -122,13 +122,84 @@ namespace LiteRT.Tests
             Assert.IsTrue(zeroPointsOffset > scalesOffset, "zeroPoints は scales の後に配置されるべき");
         }
 
+        // --- LiteRtLayout.Create テスト ---
+
+        [Test]
+        public void LiteRtLayout_Create_3D_ReturnsCorrectDimensions()
+        {
+            var layout = LiteRtLayout.Create(1, 10, 80);
+            var dims = layout.GetDimensions();
+            Assert.AreEqual(3, dims.Length);
+            Assert.AreEqual(1, dims[0]);
+            Assert.AreEqual(10, dims[1]);
+            Assert.AreEqual(80, dims[2]);
+            Assert.AreEqual(3, layout.Rank);
+        }
+
+        [Test]
+        public void LiteRtLayout_Create_Empty_ReturnsZeroRank()
+        {
+            var layout = LiteRtLayout.Create();
+            var dims = layout.GetDimensions();
+            Assert.AreEqual(0, dims.Length);
+            Assert.AreEqual(0, layout.Rank);
+        }
+
+        [Test]
+        public void LiteRtLayout_Create_Single_ReturnsOneDimension()
+        {
+            var layout = LiteRtLayout.Create(1);
+            var dims = layout.GetDimensions();
+            Assert.AreEqual(1, dims.Length);
+            Assert.AreEqual(1, dims[0]);
+            Assert.AreEqual(1, layout.Rank);
+        }
+
+        [Test]
+        public void LiteRtLayout_Create_MaxDimensions8_Succeeds()
+        {
+            var layout = LiteRtLayout.Create(1, 2, 3, 4, 5, 6, 7, 8);
+            var dims = layout.GetDimensions();
+            Assert.AreEqual(8, dims.Length);
+            Assert.AreEqual(8, layout.Rank);
+            for (int i = 0; i < 8; i++)
+                Assert.AreEqual(i + 1, dims[i]);
+        }
+
+        [Test]
+        public void LiteRtLayout_Create_Over8Dims_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                LiteRtLayout.Create(1, 2, 3, 4, 5, 6, 7, 8, 9));
+        }
+
+        [Test]
+        public void LiteRtLayout_Create_NullDims_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                LiteRtLayout.Create(null));
+        }
+
+        [Test]
+        public void LiteRtLayout_Create_DimensionsArrayPaddedWithZero()
+        {
+            // 3次元で作成し、残りの要素が 0 であることを確認
+            var layout = LiteRtLayout.Create(10, 20, 30);
+            Assert.AreEqual(0, layout.dimensions[3]);
+            Assert.AreEqual(0, layout.dimensions[4]);
+            Assert.AreEqual(0, layout.dimensions[7]);
+        }
+
         /// <summary>
         /// テスト用ヘルパー: _rankAndFlags フィールドをリフレクションで設定して LiteRtLayout を作成する。
         /// </summary>
         private static LiteRtLayout CreateLayoutWithRankAndFlags(int rank, bool hasStrides)
         {
-            uint flags = (uint)(rank & 0x7F);
-            if (hasStrides) flags |= 0x80;
+            uint rankBits = (uint)(rank & 0x7F);
+#if !(UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+            // GCC/Clang ABI: rank と has_strides は同じ 4 バイトにパックされる
+            if (hasStrides) rankBits |= 0x80;
+#endif
 
             var layout = new LiteRtLayout();
             layout.dimensions = new int[8];
@@ -140,7 +211,11 @@ namespace LiteRT.Tests
             try
             {
                 Marshal.StructureToPtr(layout, ptr, false);
-                Marshal.WriteInt32(ptr, 0, (int)flags); // 先頭4バイトに _rankAndFlags を書き込み
+                Marshal.WriteInt32(ptr, 0, (int)rankBits); // 先頭4バイトに _rankAndFlags を書き込み
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+                // MSVC ABI: has_strides は別のアロケーション単位（オフセット 4）のビット 0
+                Marshal.WriteInt32(ptr, 4, hasStrides ? 1 : 0);
+#endif
                 layout = Marshal.PtrToStructure<LiteRtLayout>(ptr);
             }
             finally

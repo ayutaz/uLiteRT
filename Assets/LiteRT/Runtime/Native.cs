@@ -45,6 +45,17 @@ namespace LiteRT
         [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
         public static extern void LiteRtDestroyEnvironment(IntPtr environment);
 
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern void LiteRtEnvironmentHasGpuEnvironment(
+            IntPtr environment,
+            [MarshalAs(UnmanagedType.I1)] out bool hasGpuEnvironment);
+
+        [DllImport(LibName, CallingConvention = CallingConvention.Cdecl)]
+        public static extern LiteRtStatus LiteRtGpuEnvironmentCreate(
+            IntPtr environment,
+            int numOptions,
+            IntPtr options); // LiteRtEnvOption* (通常は IntPtr.Zero)
+
         // =====================================================================
         // Model
         // =====================================================================

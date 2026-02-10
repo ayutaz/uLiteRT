@@ -93,16 +93,35 @@ namespace LiteRT.Samples
             }
 
             // JsonUtility は Dictionary をサポートしないため、簡易パーサーで処理
+            // "symbol_to_id" セクションの {...} を抽出（ネスト安全）
             var json = File.ReadAllText(path);
-            json = json.Trim('{', '}', ' ', '\r', '\n');
-            var entries = json.Split(',');
+
+            int anchor = json.IndexOf("\"symbol_to_id\"", System.StringComparison.Ordinal);
+            if (anchor < 0) return mapping;
+
+            int braceStart = json.IndexOf('{', anchor);
+            if (braceStart < 0) return mapping;
+
+            int depth = 1;
+            int pos = braceStart + 1;
+            while (pos < json.Length && depth > 0)
+            {
+                if (json[pos] == '{') depth++;
+                else if (json[pos] == '}') depth--;
+                pos++;
+            }
+
+            // braceStart+1 ～ pos-2 が symbol_to_id の中身（フラットな key:value 列）
+            string section = json.Substring(braceStart + 1, pos - braceStart - 2);
+            var entries = section.Split(',');
             foreach (var entry in entries)
             {
-                var kv = entry.Split(':');
-                if (kv.Length == 2)
+                int lastColon = entry.LastIndexOf(':');
+                if (lastColon > 0)
                 {
-                    var key = kv[0].Trim().Trim('"');
-                    if (int.TryParse(kv[1].Trim(), out int value))
+                    var key = entry.Substring(0, lastColon).Trim().Trim('"');
+                    var valStr = entry.Substring(lastColon + 1).Trim();
+                    if (int.TryParse(valStr, out int value))
                     {
                         mapping[key] = value;
                     }

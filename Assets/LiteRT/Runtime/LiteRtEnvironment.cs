@@ -42,6 +42,30 @@ namespace LiteRT
         /// </summary>
         public bool IsValid => !_disposed && Handle != IntPtr.Zero;
 
+        /// <summary>
+        /// GPU 環境が構築されているかどうか。
+        /// </summary>
+        public bool HasGpuEnvironment
+        {
+            get
+            {
+                ThrowIfDisposed();
+                Native.LiteRtEnvironmentHasGpuEnvironment(Handle, out var hasGpu);
+                return hasGpu;
+            }
+        }
+
+        /// <summary>
+        /// GPU 環境を明示的に初期化する。
+        /// OpenCL デバイスの自動検出・コンテキスト作成を行う。
+        /// </summary>
+        public void CreateGpuEnvironment()
+        {
+            ThrowIfDisposed();
+            LiteRtException.CheckStatus(
+                Native.LiteRtGpuEnvironmentCreate(Handle, 0, IntPtr.Zero));
+        }
+
         internal void ThrowIfDisposed()
         {
             if (_disposed)

@@ -109,6 +109,26 @@ Inference:   WriteFloat(input) → Run → ReadFloat(output)
 Dispose:     TensorBuffer → CompiledModel → Options → Model → Environment (reverse order)
 ```
 
+## Samples
+
+7 ready-to-use samples are included. Download required models first:
+
+```bash
+bash BuildScripts/download_models.sh
+```
+
+| Sample | Description | Model |
+|---|---|---|
+| Image Classification | MobileNet V2 image classification | mobilenet_v2.tflite |
+| Object Detection | SSD MobileNet V1 object detection | ssd_mobilenet_v1.tflite |
+| Image Segmentation | DeepLab V3 semantic segmentation | deeplabv3.tflite |
+| Pose Estimation | PoseNet pose estimation | posenet.tflite |
+| Style Transfer | Magenta style transfer | style_predict/transfer.tflite |
+| Sound Classification | YAMNet audio classification | yamnet.tflite |
+| Text-to-Speech | FastSpeech2 + MB-MelGAN speech synthesis | fastspeech2/mb_melgan.tflite |
+
+Each sample automatically selects GPU acceleration when available and falls back to CPU.
+
 ## Building Native Libraries
 
 Native libraries must be built separately for each target platform.

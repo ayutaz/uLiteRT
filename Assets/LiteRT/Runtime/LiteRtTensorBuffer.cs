@@ -85,6 +85,43 @@ namespace LiteRT
         }
 
         /// <summary>
+        /// CompiledModel のバッファ要件とランタイムレイアウトからテンソルバッファを作成するヘルパー。
+        /// 動的形状のテンソルに使用する。リサイズ後の実際のレイアウトを渡すこと。
+        /// </summary>
+        public static LiteRtTensorBuffer CreateFromRequirements(
+            LiteRtEnvironment environment,
+            LiteRtCompiledModel compiledModel,
+            int tensorIndex,
+            bool isInput,
+            LiteRtElementType elementType,
+            LiteRtLayout runtimeLayout,
+            int signatureIndex = 0,
+            long minimumBufferSize = 0)
+        {
+            IntPtr reqs = isInput
+                ? compiledModel.GetInputBufferRequirements(tensorIndex, signatureIndex)
+                : compiledModel.GetOutputBufferRequirements(tensorIndex, signatureIndex);
+
+            var bufferType = LiteRtCompiledModel.GetBufferType(reqs);
+            var reqsSize = (long)(ulong)LiteRtCompiledModel.GetBufferSize(reqs);
+            var calculatedSize = CalculatePackedBufferSize(elementType, runtimeLayout);
+
+            // 3値の MAX: requirements / 計算値 / 呼び出し元指定の最小サイズ
+            // 動的出力テンソルでは推定形状が実際より小さいため、
+            // 呼び出し元が入力長から逆算した最大サイズを minimumBufferSize で指定する
+            var bufferSize = (UIntPtr)(ulong)Math.Max(
+                Math.Max(reqsSize, calculatedSize), minimumBufferSize);
+
+            var tensorType = new LiteRtRankedTensorType
+            {
+                elementType = elementType,
+                layout = runtimeLayout
+            };
+
+            return CreateManaged(environment, bufferType, ref tensorType, bufferSize);
+        }
+
+        /// <summary>
         /// バッファをロックしてホストメモリポインタを取得する。
         /// 使用後は必ず Unlock を呼ぶこと。
         /// </summary>
@@ -354,6 +391,92 @@ namespace LiteRT
 
         /// <summary>バッファが有効（Dispose 済みでない）かどうか。</summary>
         public bool IsValid => !_disposed && Handle != IntPtr.Zero;
+
+        /// <summary>
+        /// ランタイムレイアウトと要素型からパックされたバッファサイズ（バイト）を計算する。
+        /// LiteRT C++ の GetNumPackedBytes (litert/core/util/tensor_type_util.h) +
+        /// GetElementSize (litert/core/util/tensor_type_util.cc) と同等。
+        /// </summary>
+        internal static long CalculatePackedBufferSize(LiteRtElementType elementType, LiteRtLayout layout)
+        {
+            var dims = layout.GetDimensions();
+            if (dims.Length == 0) return 0;
+
+            // LiteRT C++ GetElementSize — Ratio = (num, denom)
+            int num, denom;
+            switch (elementType)
+            {
+                case LiteRtElementType.Int4:
+                    num = 1; denom = 2; break;
+                case LiteRtElementType.Int2:
+                    num = 1; denom = 4; break;
+                case LiteRtElementType.Bool:
+                case LiteRtElementType.Int8:
+                case LiteRtElementType.UInt8:
+                    num = 1; denom = 1; break;
+                case LiteRtElementType.Int16:
+                case LiteRtElementType.UInt16:
+                case LiteRtElementType.Float16:
+                case LiteRtElementType.BFloat16:
+                    num = 2; denom = 1; break;
+                case LiteRtElementType.Int32:
+                case LiteRtElementType.UInt32:
+                case LiteRtElementType.Float32:
+                case LiteRtElementType.Complex64:
+                    num = 4; denom = 1; break;
+                case LiteRtElementType.Int64:
+                case LiteRtElementType.UInt64:
+                case LiteRtElementType.Float64:
+                case LiteRtElementType.Complex128:
+                    num = 8; denom = 1; break;
+                default:
+                    throw new ArgumentException(
+                        $"サポートされていない要素型: {elementType}", nameof(elementType));
+            }
+
+            long totalElements = 1;
+            foreach (var d in dims)
+                totalElements *= d;
+
+            return (totalElements * num + denom - 1) / denom;
+        }
+
+        /// <summary>
+        /// 動的出力テンソルの最大バッファサイズを推定する。
+        /// 時間軸（dim[1]）が maxFrames 未満の場合、maxFrames に置換して計算する。
+        /// </summary>
+        public static long EstimateDynamicBufferSize(
+            LiteRtElementType elementType, int[] dims, long maxFrames)
+        {
+            if (dims.Length == 0) return 0;
+
+            int elementSize;
+            switch (elementType)
+            {
+                case LiteRtElementType.Float32:
+                case LiteRtElementType.Int32:
+                    elementSize = 4; break;
+                case LiteRtElementType.Float64:
+                case LiteRtElementType.Int64:
+                    elementSize = 8; break;
+                default:
+                    elementSize = 4; break; // 安全側のデフォルト
+            }
+
+            long totalElements = 1;
+            for (int d = 0; d < dims.Length; d++)
+            {
+                long dimValue = dims[d];
+                // dim[1] = 時間軸（T）: 推定値が小さすぎる場合は maxFrames で補完
+                if (d == 1 && dimValue < maxFrames)
+                    dimValue = maxFrames;
+                // 0 以下の次元は 1 に補正（推定不能な場合）
+                if (dimValue <= 0) dimValue = 1;
+                totalElements *= dimValue;
+            }
+
+            return totalElements * elementSize;
+        }
 
         private void ThrowIfDisposed()
         {

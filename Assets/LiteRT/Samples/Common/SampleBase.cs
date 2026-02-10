@@ -119,6 +119,24 @@ namespace LiteRT.Samples
             try
             {
                 Environment = new LiteRtEnvironment();
+
+                // GPU が選択されている場合、GPU 環境を明示的に初期化
+                if ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                {
+                    try
+                    {
+                        Environment.CreateGpuEnvironment();
+                        Log("GPU 環境初期化完了");
+                    }
+                    catch (LiteRtException gpuEnvEx)
+                    {
+                        Log($"GPU 環境初期化失敗: {gpuEnvEx.Message}");
+                        Log("  CPU にフォールバックします。");
+                        selectedAccelerator = LiteRtHwAccelerators.Cpu;
+                        _acceleratorIndex = 0;
+                    }
+                }
+
                 Model = LiteRtModel.FromFile(ModelPath);
                 Options = CreateOptions();
 
@@ -126,15 +144,23 @@ namespace LiteRT.Samples
                 {
                     CompiledModel = new LiteRtCompiledModel(Environment, Model, Options);
                 }
-                catch (LiteRtException) when ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
+                catch (LiteRtException ex) when ((selectedAccelerator & LiteRtHwAccelerators.Gpu) != 0)
                 {
-                    // GPU コンパイル失敗 → CPU フォールバック
-                    Log("GPU コンパイル失敗。CPU にフォールバックします。");
+                    LogGpuDiagnostics(ex);
                     selectedAccelerator = LiteRtHwAccelerators.Cpu;
                     _acceleratorIndex = 0;
                     Options.Dispose();
                     Options = CreateOptions();
                     CompiledModel = new LiteRtCompiledModel(Environment, Model, Options);
+
+                    // CPU フォールバック成功後に蓄積された警告を取得
+                    try
+                    {
+                        var msgs = CompiledModel.GetErrorMessages();
+                        if (!string.IsNullOrEmpty(msgs))
+                            Log($"  LiteRT 警告: {msgs}");
+                    }
+                    catch { /* 無視 */ }
                 }
 
                 IsModelLoaded = true;
@@ -179,6 +205,11 @@ namespace LiteRT.Samples
                 var gpuOpts = new GpuOptions();
                 options.AddGpuOptions(gpuOpts);
             }
+
+            // エラーレポータを Buffer モードに設定（フォールバック後の警告取得用）
+            var rtOpts = new RuntimeOptions();
+            rtOpts.SetErrorReporterMode(LiteRtErrorReporterMode.Buffer);
+            options.AddRuntimeOptions(rtOpts);
 
             return options;
         }
@@ -348,6 +379,28 @@ namespace LiteRT.Samples
         /// サンプル固有の GUI を描画する。
         /// </summary>
         protected abstract void DrawSampleGUI();
+
+        /// <summary>
+        /// GPU コンパイル失敗時の診断情報をログ出力する。
+        /// </summary>
+        protected void LogGpuDiagnostics(LiteRtException ex, string prefix = "")
+        {
+            Log($"{prefix}GPU コンパイル失敗。CPU にフォールバックします。");
+            Log($"  エラー: {ex.Message} (Status: {ex.Status})");
+            Log($"  GPU デバイス: {SystemInfo.graphicsDeviceName}");
+            Log($"  GPU API: {SystemInfo.graphicsDeviceType} ({SystemInfo.graphicsDeviceVersion})");
+            Log($"  Compute Shader: {SystemInfo.supportsComputeShaders}");
+            Log($"  Graphics Memory: {SystemInfo.graphicsMemorySize} MB");
+            try
+            {
+                bool hasGpu = Environment?.HasGpuEnvironment ?? false;
+                Log($"  LiteRT GPU 環境: {hasGpu}");
+            }
+            catch (EntryPointNotFoundException)
+            {
+                Log("  LiteRT GPU 環境: 確認不可（シンボル未エクスポート）");
+            }
+        }
 
         /// <summary>
         /// 診断ログにメッセージを追加する。

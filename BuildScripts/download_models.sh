@@ -89,11 +89,11 @@ download_file \
 if [ ! -f "${MODELS_DIR}/fastspeech2.tflite" ] || [ ! -f "${MODELS_DIR}/mb_melgan.tflite" ]; then
     echo "  ダウンロード: fastspeech2.tflite + mb_melgan.tflite"
     curl -sSL -o "${TEMP_DIR}/tts_models.zip" \
-        "https://github.com/luan78zaoha/TTS_tflite_cpp/releases/download/0.1.0/models.zip"
+        "https://github.com/luan78zaoha/TTS_tflite_cpp/releases/download/0.1.0/models_ljspeech.zip"
     unzip -qo "${TEMP_DIR}/tts_models.zip" -d "${TEMP_DIR}/tts_models"
-    # zip 内のファイル名を探してコピー
-    find "${TEMP_DIR}/tts_models" -name "*fastspeech2*.tflite" -exec cp {} "${MODELS_DIR}/fastspeech2.tflite" \;
-    find "${TEMP_DIR}/tts_models" -name "*mb_melgan*.tflite" -exec cp {} "${MODELS_DIR}/mb_melgan.tflite" \;
+    # LJSpeech (英語) モデルをコピー（量子化版 fastspeech2 → fastspeech2.tflite にリネーム）
+    find "${TEMP_DIR}/tts_models" -name "fastspeech2_quan.tflite" -exec cp {} "${MODELS_DIR}/fastspeech2.tflite" \;
+    find "${TEMP_DIR}/tts_models" -name "mb_melgan.tflite" -exec cp {} "${MODELS_DIR}/mb_melgan.tflite" \;
 else
     echo "  スキップ（既存）: fastspeech2.tflite + mb_melgan.tflite"
 fi

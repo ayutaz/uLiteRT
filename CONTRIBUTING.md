@@ -66,9 +66,11 @@ BuildScripts\build_native.bat
 1. Unity エディタで **Window > General > Test Runner** を開きます。
 2. **PlayMode** タブを選択します。
 3. **Run All** をクリックしてすべてのテストを実行します。
-4. すべてのテスト (40テスト) がパスすることを確認してください。
+4. すべてのテスト (122テスト) がパスすることを確認してください。
 
-テストファイルは `Assets/LiteRT/Tests/Runtime/` に配置されています。
+テストファイルは以下に配置されています:
+- `Assets/LiteRT/Tests/Runtime/` — コアライブラリテスト (89テスト)
+- `Assets/LiteRT/Tests/Samples/` — サンプル共通基盤テスト (33テスト)
 
 ## Issue 報告ガイドライン
 

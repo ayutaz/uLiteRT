@@ -103,14 +103,44 @@ Assets/LiteRT/Runtime/
   CpuOptions.cs              — CPU 固有オプション                           [実装済み]
   RuntimeOptions.cs           — ランタイム固有オプション                     [実装済み]
   LiteRtTensorInfo.cs         — テンソルメタデータ（読み取り専用）           [実装済み]
+  AssemblyInfo.cs             — InternalsVisibleTo 設定                      [実装済み]
+```
 
+### サンプル構成
+
+```
+Assets/LiteRT/Samples/
+  Common/
+    SampleBase.cs              — 全サンプル共通基盤 (GPU/CPU 切替、モデルロード)
+    ImageHelper.cs             — 画像前処理ユーティリティ
+    LabelLoader.cs             — ラベル・マッピング読み込み
+    AssemblyInfo.cs            — InternalsVisibleTo 設定
+  ImageClassification/         — MobileNet V2 画像分類
+  ObjectDetection/             — SSD MobileNet V1 物体検出
+  ImageSegmentation/           — DeepLab V3 セグメンテーション
+  PoseEstimation/              — PoseNet 姿勢推定
+  StyleTransfer/               — Magenta スタイル変換
+  SoundClassification/         — YAMNet 音声分類
+  TextToSpeech/                — FastSpeech2 + MB-MelGAN TTS
+```
+
+### テスト構成 (122テスト)
+
+```
 Assets/LiteRT/Tests/Runtime/
-  StructLayoutTests.cs       — 構造体サイズ・オフセット検証                 [実装済み]
-  EnumTests.cs               — 列挙値の C ヘッダーとの一致検証              [実装済み]
-  NewEnumTests.cs            — 拡張 enum の値検証                           [実装済み]
-  StructOperationTests.cs    — 構造体操作テスト                             [実装済み]
-  ExceptionTests.cs          — 例外変換テスト                               [実装済み]
-  InputValidationTests.cs    — 入力バリデーションテスト                     [実装済み]
+  StructLayoutTests.cs              — 構造体サイズ・オフセット検証 (8テスト)
+  EnumTests.cs                      — 列挙値の C ヘッダーとの一致検証 (8テスト)
+  NewEnumTests.cs                   — 拡張 enum の値検証 (6テスト)
+  StructOperationTests.cs           — 構造体操作テスト (18テスト)
+  ExceptionTests.cs                 — 例外変換テスト (6テスト)
+  InputValidationTests.cs           — 入力バリデーションテスト (6テスト)
+  CalculatePackedBufferSizeTests.cs — バッファサイズ計算テスト (21テスト)
+  DisposeSafetyTests.cs             — Dispose 安全性テスト (16テスト)
+
+Assets/LiteRT/Tests/Samples/
+  ImageHelperTests.cs               — 画像前処理テスト (11テスト)
+  LabelLoaderTests.cs               — ラベル読み込みテスト (11テスト)
+  EstimateDynamicBufferSizeTests.cs — 動的バッファサイズ推定テスト (11テスト)
 ```
 
 ### API呼び出しフロー
@@ -130,6 +160,70 @@ Assets/LiteRT/Tests/Runtime/
 - GPU バッファ連携は `GL.IssuePluginEvent` でレンダリングスレッドと同期が必要
 - `LiteRtTensorBufferRequirements` は CompiledModel が所有（Destroy 不要）
 - Windows の `EntryPointNotFoundException` は `windows_exported_symbols.def` にシンボル追加が必要な場合がある
+
+## Windows GPU 対応調査 (2026-02-10)
+
+### 現状: GPU コンパイルは失敗、CPU フォールバックで動作
+
+テスト環境: NVIDIA GeForce RTX 4070 Ti SUPER, Direct3D 12 [level 12.2], Windows
+
+### 調査で判明した2段階の問題
+
+#### 問題1: GPU 環境が構築されない (解決済み)
+
+- **原因**: `LiteRtCreateEnvironment(0, IntPtr.Zero, ...)` だけでは GPU 環境が作成されない。C API 側 (`litert_environment.cc:55-66`) で `has_gpu_options == true` の場合のみ GPU 環境を構築する仕組み
+- **対策**: `LiteRtGpuEnvironmentCreate` を明示的に呼び出すよう修正。`LiteRtEnvironment.CreateGpuEnvironment()` メソッドを追加し、`SampleBase.LoadModel()` で GPU 選択時に呼び出す
+- **結果**: `HasGpuEnvironment` が `False` → `True` に改善。OpenCL デバイスの検出・コンテキスト作成に成功
+
+#### 問題2: GPU モデルコンパイルが ErrorCompilation で失敗 (未解決)
+
+GPU 環境は構築されるが、`LiteRtCreateCompiledModel` で `ErrorCompilation` が発生する。
+
+**推定原因の候補:**
+
+1. **OpenCL オペレータ未サポート**: LiteRT の OpenCL GPU デリゲートが当該モデル（mb_melgan.tflite）の一部オペレータに非対応の可能性。TTS モデルは複雑な演算グラフを含むため、全オペレータが GPU デリゲートでサポートされていない場合がある
+2. **Windows OpenCL の制限**: LiteRT の GPU デリゲートは主に Android (OpenCL/OpenGL) と iOS (Metal) 向けに最適化されており、Windows の OpenCL サポートは限定的
+3. **Bazel ビルドフラグ**: Windows DLL ビルド時に `LITERT_HAS_OPENCL_SUPPORT` が有効であるか未確認。ビルドフラグが不足している場合、GPU コンパイルパスが不完全な可能性
+
+### Windows GPU バックエンド対応状況
+
+| バックエンド | 対応状況 | 備考 |
+|---|---|---|
+| OpenCL | 環境構築可、コンパイル失敗 | NVIDIA ドライバの OpenCL.dll を検出・ロードに成功するが、モデルコンパイルで ErrorCompilation |
+| Vulkan | 実験的 | バッファ作成関数が未エクスポート（Getter のみ） |
+| WebGPU | 別 DLL 必要 | `libLiteRtWebGpuAccelerator.dll` が別途必要 |
+| Metal | 非対応 | Apple 専用 |
+| OpenGL | 非対応 | Linux/Android 専用 |
+
+### GPU 初期化フロー (現在の実装)
+
+```
+Environment 作成 → CreateGpuEnvironment() → [成功] → Model → Options(GPU) → CompiledModel
+                                            → [失敗] → CPU フォールバック
+
+CompiledModel 作成 → [ErrorCompilation] → CPU フォールバック（現在ここで失敗）
+```
+
+### 実際のログ出力
+
+```
+GPU 環境初期化完了
+GPU コンパイル失敗。CPU にフォールバックします。
+  エラー: LiteRT error: ErrorCompilation (Status: ErrorCompilation)
+  GPU デバイス: NVIDIA GeForce RTX 4070 Ti SUPER
+  GPU API: Direct3D12 (Direct3D 12 [level 12.2])
+  Compute Shader: True
+  Graphics Memory: 16063 MB
+  LiteRT GPU 環境: True
+モデル読み込み完了: mb_melgan.tflite
+```
+
+### 今後の調査方針
+
+1. **エラーメッセージの詳細取得**: `LiteRtCompiledModelGetErrorMessages` で GPU コンパイル失敗の具体的な理由（未サポートオペレータ名等）を取得する
+2. **シンプルなモデルでの検証**: MobileNet 等の標準的なモデルで GPU コンパイルが成功するか確認し、モデル固有の問題かプラットフォームの問題かを切り分ける
+3. **Bazel ビルドフラグ確認**: Windows DLL ビルド時の `LITERT_HAS_OPENCL_SUPPORT` フラグの有無を確認
+4. **Android 実機での GPU テスト**: Android (OpenCL/OpenGL) は LiteRT の主要ターゲットであり、GPU 推論が動作する可能性が高い
 
 ## 言語
 
