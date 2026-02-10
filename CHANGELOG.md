@@ -3,6 +3,16 @@
 本プロジェクトのすべての注目すべき変更はこのファイルに記録されます。
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に基づいています。
 
+## [0.3.0] - 2026-02-10
+
+### Added
+- サンプルメニューシーン (SampleMenuUI) — 全7サンプルへのナビゲーション
+- 各サンプルを独立シーンに分離 (8シーン: メニュー + 7サンプル)
+- SampleBase に「メニューに戻る」ボタン追加
+
+### Removed
+- 旧単一シーン (Assets/Scenes/SampleTestScene.unity) を削除
+
 ## [0.2.0] - 2026-02-10
 
 ### Added

@@ -111,7 +111,7 @@ Dispose:     TensorBuffer → CompiledModel → Options → Model → Environmen
 
 ## Samples
 
-7 ready-to-use samples are included. Download required models first:
+7 ready-to-use samples are included, each in its own scene with a shared menu for navigation. Download required models first:
 
 ```bash
 bash BuildScripts/download_models.sh
@@ -127,7 +127,7 @@ bash BuildScripts/download_models.sh
 | Sound Classification | YAMNet audio classification | yamnet.tflite |
 | Text-to-Speech | FastSpeech2 + MB-MelGAN speech synthesis | fastspeech2/mb_melgan.tflite |
 
-Each sample automatically selects GPU acceleration when available and falls back to CPU.
+Open `Assets/LiteRT/Samples/Menu/SampleMenu.unity` to launch the menu scene, then select any sample. Each sample includes a "Back to Menu" button to return. Each sample automatically selects GPU acceleration when available and falls back to CPU.
 
 ## Building Native Libraries
 

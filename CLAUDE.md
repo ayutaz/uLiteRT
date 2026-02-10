@@ -108,20 +108,26 @@ Assets/LiteRT/Runtime/
 
 ### サンプル構成
 
+各サンプルは独立シーンに分離されており、メニューシーンからナビゲーションできる。
+SampleBase に「メニューに戻る」ボタンがあり、SceneManager.LoadScene("SampleMenu") でメニューに戻る。
+
 ```
 Assets/LiteRT/Samples/
   Common/
-    SampleBase.cs              — 全サンプル共通基盤 (GPU/CPU 切替、モデルロード)
+    SampleBase.cs              — 全サンプル共通基盤 (GPU/CPU 切替、モデルロード、メニュー遷移)
     ImageHelper.cs             — 画像前処理ユーティリティ
     LabelLoader.cs             — ラベル・マッピング読み込み
     AssemblyInfo.cs            — InternalsVisibleTo 設定
-  ImageClassification/         — MobileNet V2 画像分類
-  ObjectDetection/             — SSD MobileNet V1 物体検出
-  ImageSegmentation/           — DeepLab V3 セグメンテーション
-  PoseEstimation/              — PoseNet 姿勢推定
-  StyleTransfer/               — Magenta スタイル変換
-  SoundClassification/         — YAMNet 音声分類
-  TextToSpeech/                — FastSpeech2 + MB-MelGAN TTS
+  Menu/
+    SampleMenuUI.cs            — IMGUI メニュー画面 (7サンプル一覧)
+    SampleMenu.unity           — メニューシーン (BuildSettings index 0)
+  ImageClassification/         — MobileNet V2 画像分類 + ImageClassification.unity
+  ObjectDetection/             — SSD MobileNet V1 物体検出 + ObjectDetection.unity
+  ImageSegmentation/           — DeepLab V3 セグメンテーション + ImageSegmentation.unity
+  PoseEstimation/              — PoseNet 姿勢推定 + PoseEstimation.unity
+  StyleTransfer/               — Magenta スタイル変換 + StyleTransfer.unity
+  SoundClassification/         — YAMNet 音声分類 + SoundClassification.unity
+  TextToSpeech/                — FastSpeech2 + MB-MelGAN TTS + TextToSpeech.unity
 ```
 
 ### テスト構成 (122テスト)

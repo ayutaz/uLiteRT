@@ -111,7 +111,7 @@ float[] result = outputBuffer.ReadFloat();
 
 ## サンプル
 
-すぐに使える 7 つのサンプルが含まれています。まず必要なモデルをダウンロードしてください:
+すぐに使える 7 つのサンプルが含まれており、それぞれ独立したシーンとして構成されています。メニューシーンから各サンプルへ遷移できます。まず必要なモデルをダウンロードしてください:
 
 ```bash
 bash BuildScripts/download_models.sh
@@ -127,7 +127,7 @@ bash BuildScripts/download_models.sh
 | Sound Classification | YAMNet 音声分類 | yamnet.tflite |
 | Text-to-Speech | FastSpeech2 + MB-MelGAN 音声合成 | fastspeech2/mb_melgan.tflite |
 
-各サンプルは GPU アクセラレーションを自動選択し、利用できない場合は CPU にフォールバックします。
+`Assets/LiteRT/Samples/Menu/SampleMenu.unity` を開いてメニューシーンを起動し、任意のサンプルを選択してください。各サンプルには「メニューに戻る」ボタンがあります。各サンプルは GPU アクセラレーションを自動選択し、利用できない場合は CPU にフォールバックします。
 
 ## ネイティブライブラリのビルド
 

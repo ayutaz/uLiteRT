@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 
 namespace LiteRT.Samples
@@ -255,8 +256,16 @@ namespace LiteRT.Samples
 
             GUILayout.BeginArea(new Rect(10, 10, Screen.width - 20, Screen.height - 20));
 
-            // タイトル
-            GUILayout.Label(GetSampleTitle(), GUI.skin.GetStyle("Label"));
+            // タイトル行（メニューに戻るボタン付き）
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("< メニューに戻る", GUILayout.Width(140)))
+            {
+                DisposeResources();
+                SceneManager.LoadScene("SampleMenu");
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(GetSampleTitle());
+            GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             // エラー表示
